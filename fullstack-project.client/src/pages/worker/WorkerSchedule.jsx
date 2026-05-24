@@ -25,7 +25,7 @@ export default function WorkerSchedule() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   const handleUpdate = async (id, status) => {
     setUpdatingId(id);

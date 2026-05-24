@@ -19,7 +19,7 @@ export default function WorkerAssignments() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { void fetchOrders(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   const handleUpdate = async (id, status) => {
     setUpdatingId(id);

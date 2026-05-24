@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ShoppingCart, DollarSign, Star, Wrench, CheckCircle, Clock, AlertCircle, Calendar, RefreshCw } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
+  ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 
 export default function WorkerDashboard() {
@@ -22,11 +22,11 @@ export default function WorkerDashboard() {
       const [dashRes, ordersRes] = await Promise.all([dashboardApi.worker(), ordersApi.getAll()]);
       setData(dashRes.data);
       setOrders(ordersRes.data || []);
-    } catch {}
+    } catch { /* ignore */ }
     if (isRefresh) setRefreshing(false); else setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   if (loading) return <LoadingSpinner />;
   if (!data) return <div className="text-center py-20 text-gray-500">Failed to load dashboard</div>;

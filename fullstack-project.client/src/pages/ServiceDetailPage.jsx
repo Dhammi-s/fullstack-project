@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { servicesApi, reviewsApi, ordersApi, settingsApi } from '../api/services';
-import { useCart } from '../context/CartContext';
+
 import { useAuth } from '../context/AuthContext';
 import { StarRating, LoadingSpinner } from '../components/UI';
 import { ShoppingCart, User, ArrowLeft, Calendar, MapPin, CreditCard, Banknote } from 'lucide-react';

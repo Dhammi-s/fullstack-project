@@ -28,7 +28,7 @@ export default function AdminOrders() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { void fetchOrders(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   const handleStatusChange = async (id, status) => {
     setUpdatingId(id);

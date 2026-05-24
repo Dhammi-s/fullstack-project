@@ -7,6 +7,7 @@ using System.Text;
 using fullstack_project.Server.Data;
 using fullstack_project.Server.Hubs;
 using fullstack_project.Server.Models;
+using fullstack_project.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+// Email Service
+builder.Services.AddSingleton<IEmailService, EmailService>();
 
 // Controllers
 builder.Services.AddControllers();

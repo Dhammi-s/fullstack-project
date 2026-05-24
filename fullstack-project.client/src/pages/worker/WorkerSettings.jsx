@@ -1,12 +1,36 @@
 import { useState, useEffect } from 'react';
 import { usersApi, settingsApi } from '../../api/services';
 import { LoadingSpinner } from '../../components/UI';
-import { useAuth } from '../../context/AuthContext';
-import { Settings, Save, User, Bell, Lock, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';import { Settings, Save, User, Bell, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const Section = ({ icon: Icon, title, children }) => (
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="flex items-center gap-3 p-5 border-b border-gray-100 bg-gray-50">
+      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+        <Icon className="w-4 h-4 text-green-600" />
+      </div>
+      <h2 className="font-bold text-gray-800">{title}</h2>
+    </div>
+    <div className="p-5 space-y-4">{children}</div>
+  </div>
+);
+
+const Toggle = ({ label, desc, value, onChange }) => (
+  <div className="flex items-center justify-between py-2">
+    <div>
+      <p className="font-medium text-gray-800 text-sm">{label}</p>
+      {desc && <p className="text-gray-400 text-xs mt-0.5">{desc}</p>}
+    </div>
+    <button onClick={onChange}
+      className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${value ? 'bg-green-600' : 'bg-gray-300'}`}>
+      <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${value ? 'translate-x-7' : 'translate-x-1'}`} />
+    </button>
+  </div>
+);
+
 export default function WorkerSettings() {
-  const { user } = useAuth();
+  useAuth(); // keep context available
   const [profile, setProfile] = useState(null);
   const [publicSettings, setPublicSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,31 +73,6 @@ export default function WorkerSettings() {
 
   if (loading) return <LoadingSpinner />;
   if (!profile) return null;
-
-  const Section = ({ icon: Icon, title, children }) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="flex items-center gap-3 p-5 border-b border-gray-100 bg-gray-50">
-        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-          <Icon className="w-4 h-4 text-green-600" />
-        </div>
-        <h2 className="font-bold text-gray-800">{title}</h2>
-      </div>
-      <div className="p-5 space-y-4">{children}</div>
-    </div>
-  );
-
-  const Toggle = ({ label, desc, value, onChange }) => (
-    <div className="flex items-center justify-between py-2">
-      <div>
-        <p className="font-medium text-gray-800 text-sm">{label}</p>
-        {desc && <p className="text-gray-400 text-xs mt-0.5">{desc}</p>}
-      </div>
-      <button onClick={onChange}
-        className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${value ? 'bg-green-600' : 'bg-gray-300'}`}>
-        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${value ? 'translate-x-7' : 'translate-x-1'}`} />
-      </button>
-    </div>
-  );
 
   return (
     <div className="space-y-6">

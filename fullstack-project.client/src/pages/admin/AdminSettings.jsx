@@ -4,6 +4,39 @@ import { LoadingSpinner } from '../../components/UI';
 import { Settings, Save, Globe, DollarSign, Shield, Eye, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const Section = ({ icon: Icon, title, children }) => (
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="flex items-center gap-3 p-5 border-b border-gray-100 bg-gray-50">
+      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+        <Icon className="w-4 h-4 text-blue-600" />
+      </div>
+      <h2 className="font-bold text-gray-800">{title}</h2>
+    </div>
+    <div className="p-5 space-y-4">{children}</div>
+  </div>
+);
+
+const Toggle = ({ label, desc, value, onChange }) => (
+  <div className="flex items-center justify-between py-2">
+    <div>
+      <p className="font-medium text-gray-800 text-sm">{label}</p>
+      {desc && <p className="text-gray-400 text-xs mt-0.5">{desc}</p>}
+    </div>
+    <button onClick={onChange}
+      className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${value ? 'bg-blue-600' : 'bg-gray-300'}`}>
+      <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${value ? 'translate-x-7' : 'translate-x-1'}`} />
+    </button>
+  </div>
+);
+
+const SettingsField = ({ label, value, onChange, type = 'text' }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <input type={type} value={value} onChange={e => onChange(e.target.value)}
+      className="input-field w-full" />
+  </div>
+);
+
 export default function AdminSettings() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,39 +67,6 @@ export default function AdminSettings() {
   if (loading) return <LoadingSpinner />;
   if (!settings) return null;
 
-  const Section = ({ icon: Icon, title, children }) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="flex items-center gap-3 p-5 border-b border-gray-100 bg-gray-50">
-        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          <Icon className="w-4 h-4 text-blue-600" />
-        </div>
-        <h2 className="font-bold text-gray-800">{title}</h2>
-      </div>
-      <div className="p-5 space-y-4">{children}</div>
-    </div>
-  );
-
-  const Toggle = ({ label, desc, value, onChange }) => (
-    <div className="flex items-center justify-between py-2">
-      <div>
-        <p className="font-medium text-gray-800 text-sm">{label}</p>
-        {desc && <p className="text-gray-400 text-xs mt-0.5">{desc}</p>}
-      </div>
-      <button onClick={onChange}
-        className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${value ? 'bg-blue-600' : 'bg-gray-300'}`}>
-        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${value ? 'translate-x-7' : 'translate-x-1'}`} />
-      </button>
-    </div>
-  );
-
-  const Field = ({ label, value, onChange, type = 'text' }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)}
-        className="input-field w-full" />
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -86,9 +86,9 @@ export default function AdminSettings() {
       </div>
 
       <Section icon={Globe} title="Site Information">
-        <Field label="Site Name" value={settings.siteName} onChange={v => set('siteName', v)} />
-        <Field label="Contact Email" value={settings.siteEmail} onChange={v => set('siteEmail', v)} type="email" />
-        <Field label="Contact Phone" value={settings.sitePhone} onChange={v => set('sitePhone', v)} />
+        <SettingsField label="Site Name" value={settings.siteName} onChange={v => set('siteName', v)} />
+        <SettingsField label="Contact Email" value={settings.siteEmail} onChange={v => set('siteEmail', v)} type="email" />
+        <SettingsField label="Contact Phone" value={settings.sitePhone} onChange={v => set('sitePhone', v)} />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
           <select value={settings.currency} onChange={e => set('currency', e.target.value)} className="input-field w-full">

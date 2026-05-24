@@ -180,6 +180,7 @@ namespace fullstack_project.Server.DTOs
         public string CustomerName { get; set; } = string.Empty;
         public string? WorkerId { get; set; }
         public string? WorkerName { get; set; }
+        public int? ServiceId { get; set; }
         public string? ServiceTitle { get; set; }
         public List<OrderItemResponseDto> Items { get; set; } = new();
     }

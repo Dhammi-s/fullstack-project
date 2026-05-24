@@ -12,7 +12,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']; // eslint-disable-line no-unused-vars
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -42,11 +42,11 @@ export default function AdminDashboard() {
       const [dashRes, ordersRes] = await Promise.all([dashboardApi.admin(), ordersApi.getAll()]);
       setData(dashRes.data);
       setOrders(ordersRes.data || []);
-    } catch {}
+    } catch { /* ignore */ }
     if (isRefresh) setRefreshing(false); else setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   if (loading) return <LoadingSpinner />;
   if (!data) return <div className="text-center py-20 text-gray-500">Failed to load dashboard</div>;
@@ -68,7 +68,6 @@ export default function AdminDashboard() {
   // Status breakdown for pie
   const statusCount = {};
   orders.forEach(o => { statusCount[o.status] = (statusCount[o.status] || 0) + 1; });
-  const pieData = Object.entries(statusCount).map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] }));
 
   const orderStatusData = [
     { name: 'Pending', value: data.pendingOrders, color: '#F59E0B' },

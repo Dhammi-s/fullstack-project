@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, Wrench, ShoppingCart, Star,
   MessageCircle, Bell, User, LogOut, Menu, X, DollarSign,
-  BarChart2, Calendar, Tag, ChevronRight, Settings
+  Calendar, Tag, ChevronRight, Settings
 } from 'lucide-react';
 
 function SidebarLink({ to, icon: Icon, label, onClick }) {
@@ -58,15 +58,8 @@ const customerLinks = [
   { to: '/customer/settings', icon: Settings, label: 'Settings' },
 ];
 
-export default function DashboardLayout() {
-  const { user, logout, isAdmin, isWorker } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const links = isAdmin ? adminLinks : isWorker ? workerLinks : customerLinks;
-  const roleLabel = isAdmin ? 'Admin Panel' : isWorker ? 'Worker Portal' : 'My Account';
-  const roleColor = isAdmin ? 'from-slate-800 to-slate-900' : isWorker ? 'from-green-800 to-green-900' : 'from-blue-700 to-blue-900';
-
-  const Sidebar = ({ onClose }) => (
+function Sidebar({ onClose, links, roleColor, roleLabel, user, logout }) {
+  return (
     <div className="flex flex-col h-full">
       {/* Brand */}
       <div className={`bg-gradient-to-b ${roleColor} text-white p-5`}>
@@ -93,14 +86,12 @@ export default function DashboardLayout() {
           </div>
         </div>
       </div>
-
       {/* Nav Links */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {links.map(link => (
           <SidebarLink key={link.to} {...link} onClick={onClose} />
         ))}
       </nav>
-
       {/* Bottom */}
       <div className="p-4 border-t border-gray-100">
         <Link to="/profile" className="sidebar-link mb-1">
@@ -112,12 +103,22 @@ export default function DashboardLayout() {
       </div>
     </div>
   );
+}
+
+export default function DashboardLayout() {
+  const { user, logout, isAdmin, isWorker } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const links = isAdmin ? adminLinks : isWorker ? workerLinks : customerLinks;
+  const roleLabel = isAdmin ? 'Admin Panel' : isWorker ? 'Worker Portal' : 'My Account';
+  const roleColor = isAdmin ? 'from-slate-800 to-slate-900' : isWorker ? 'from-green-800 to-green-900' : 'from-blue-700 to-blue-900';
+  const sidebarProps = { links, roleColor, roleLabel, user, logout };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 shadow-sm flex-shrink-0">
-        <Sidebar />
+        <Sidebar {...sidebarProps} />
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -125,7 +126,7 @@ export default function DashboardLayout() {
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
           <div className="relative w-64 bg-white h-full shadow-xl">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
+            <Sidebar {...sidebarProps} onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
       )}

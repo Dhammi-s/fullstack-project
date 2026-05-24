@@ -6,6 +6,8 @@ using System.Security.Claims;
 using System.Text;
 using fullstack_project.Server.DTOs;
 using fullstack_project.Server.Models;
+using fullstack_project.Server.Services;
+using fullstack_project.Server.Data;
 
 namespace fullstack_project.Server.Controllers
 {
@@ -17,16 +19,22 @@ namespace fullstack_project.Server.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _config;
+        private readonly IEmailService _email;
+        private readonly ApplicationDbContext _db;
 
         public AuthController(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
-            IConfiguration config)
+            IConfiguration config,
+            IEmailService email,
+            ApplicationDbContext db)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _config = config;
+            _email = email;
+            _db = db;
         }
 
         [HttpPost("register")]
@@ -57,6 +65,35 @@ namespace fullstack_project.Server.Controllers
                 await _roleManager.CreateAsync(new IdentityRole(role));
 
             await _userManager.AddToRoleAsync(user, role);
+
+            // Send welcome email to user (fire-and-forget)
+            _ = _email.SendWelcomeAsync(user.Email!, user.FullName, role);
+
+            // Notify admin about new registration
+            _ = _email.SendAdminNotificationAsync(
+                $"New {role} Registered — {user.FullName}",
+                $@"<div style='font-family:Arial,sans-serif;padding:20px;'>
+                    <h2>New User Registration</h2>
+                    <p><strong>Name:</strong> {user.FullName}</p>
+                    <p><strong>Email:</strong> {user.Email}</p>
+                    <p><strong>Role:</strong> {role}</p>
+                    <p><strong>Registered At:</strong> {DateTime.UtcNow:f} UTC</p>
+                </div>");
+
+            // Create in-app notification for admin users
+            var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
+            foreach (var admin in adminUsers)
+            {
+                _db.Notifications.Add(new fullstack_project.Server.Models.Notification
+                {
+                    UserId = admin.Id,
+                    Title = $"New {role} Registered",
+                    Message = $"{user.FullName} ({user.Email}) just created a {role} account.",
+                    Type = "Info",
+                    Link = "/admin/users"
+                });
+            }
+            await _db.SaveChangesAsync();
 
             var token = await GenerateToken(user);
             return Ok(new AuthResponseDto

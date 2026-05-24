@@ -4,7 +4,7 @@ import { chatApi, usersApi } from '../api/services';
 import { useAuth } from '../context/AuthContext';
 import { LoadingSpinner } from '../components/UI';
 import * as signalR from '@microsoft/signalr';
-import { Send, MessageCircle, User, Search } from 'lucide-react';
+import { Send, MessageCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ChatPage() {
@@ -83,7 +83,7 @@ export default function ChatPage() {
         try {
           const ur = await usersApi.getUser(uid);
           setSelectedUser({ userId: uid, userName: ur.data.fullName, userImage: ur.data.profileImage });
-        } catch {}
+        } catch { /* ignore */ }
       }
     } catch {
       toast.error('Failed to load messages');
@@ -93,7 +93,7 @@ export default function ChatPage() {
   }, [conversations]);
 
   useEffect(() => {
-    if (chatUserId) loadMessages(chatUserId);
+    if (chatUserId) void loadMessages(chatUserId); // eslint-disable-line react-hooks/set-state-in-effect
   }, [chatUserId]); // eslint-disable-line
 
   // Auto scroll

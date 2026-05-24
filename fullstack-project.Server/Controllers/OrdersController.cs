@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using fullstack_project.Server.Data;
 using fullstack_project.Server.DTOs;
 using fullstack_project.Server.Models;
+using fullstack_project.Server.Services;
 using System.Security.Claims;
 
 namespace fullstack_project.Server.Controllers
@@ -14,8 +15,13 @@ namespace fullstack_project.Server.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IEmailService _email;
 
-        public OrdersController(ApplicationDbContext db) => _db = db;
+        public OrdersController(ApplicationDbContext db, IEmailService email)
+        {
+            _db = db;
+            _email = email;
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetOrders()
@@ -99,7 +105,7 @@ namespace fullstack_project.Server.Controllers
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
-            // Add notification
+            // Add in-app notification
             _db.Notifications.Add(new Notification
             {
                 UserId = userId,
@@ -109,6 +115,30 @@ namespace fullstack_project.Server.Controllers
                 Link = $"/orders/{order.Id}"
             });
             await _db.SaveChangesAsync();
+
+            // Send confirmation email to customer (fire-and-forget)
+            var orderCustomer = await _db.Users.FindAsync(userId);
+            var orderService = order.ServiceId.HasValue ? await _db.Services.FindAsync(order.ServiceId.Value) : null;
+            if (orderCustomer?.Email != null)
+            {
+                _ = _email.SendOrderConfirmationAsync(
+                    orderCustomer.Email, orderCustomer.FullName,
+                    order.OrderNumber, order.TotalAmount,
+                    orderService?.Title, order.PaymentMethod, order.ScheduledAt);
+            }
+
+            // Notify admin via email
+            _ = _email.SendAdminNotificationAsync(
+                $"New Order Placed — #{order.OrderNumber}",
+                $@"<div style='font-family:Arial,sans-serif;padding:20px;'>
+                    <h2>New Order #{order.OrderNumber}</h2>
+                    <p><strong>Customer:</strong> {orderCustomer?.FullName} ({orderCustomer?.Email})</p>
+                    <p><strong>Service:</strong> {orderService?.Title ?? "Product Order"}</p>
+                    <p><strong>Amount:</strong> ${order.TotalAmount:F2}</p>
+                    <p><strong>Payment:</strong> {order.PaymentMethod}</p>
+                    {(order.ScheduledAt.HasValue ? $"<p><strong>Scheduled:</strong> {order.ScheduledAt.Value:f}</p>" : "")}
+                    <p><strong>Address:</strong> {order.Address ?? "N/A"}</p>
+                </div>");
 
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, MapToDto(order));
         }
@@ -180,6 +210,33 @@ namespace fullstack_project.Server.Controllers
                 Link = $"/orders/{order.Id}"
             });
             await _db.SaveChangesAsync();
+
+            // Send email to worker
+            var worker = await _db.Users.FindAsync(dto.WorkerId);
+            var service = order.ServiceId.HasValue ? await _db.Services.FindAsync(order.ServiceId.Value) : null;
+            if (worker?.Email != null)
+            {
+                _ = _email.SendWorkerAssignedAsync(
+                    worker.Email, worker.FullName,
+                    order.OrderNumber, order.Customer?.FullName ?? "Customer",
+                    service?.Title, order.ScheduledAt, order.Address ?? "Not specified");
+            }
+
+            // Send email to customer about assignment
+            if (order.Customer?.Email != null)
+            {
+                _ = _email.SendAsync(
+                    order.Customer.Email, order.Customer.FullName,
+                    $"Worker Assigned to Your Order #{order.OrderNumber}",
+                    $@"<div style='font-family:Arial,sans-serif;padding:20px;'>
+                        <h2>✅ Worker Assigned!</h2>
+                        <p>Hi {order.Customer.FullName},</p>
+                        <p><strong>{worker?.FullName ?? "A worker"}</strong> has been assigned to your order <strong>#{order.OrderNumber}</strong>.</p>
+                        {(order.ScheduledAt.HasValue ? $"<p><strong>Scheduled for:</strong> {order.ScheduledAt.Value:f}</p>" : "")}
+                        <p>You can chat with your worker directly in the app.</p>
+                    </div>");
+            }
+
             return Ok(new { message = "Worker assigned" });
         }
 
@@ -230,6 +287,7 @@ namespace fullstack_project.Server.Controllers
             CustomerName = o.Customer?.FullName ?? "",
             WorkerId = o.WorkerId,
             WorkerName = o.Worker?.FullName,
+            ServiceId = o.ServiceId,
             ServiceTitle = o.Service?.Title,
             Items = o.OrderItems.Select(i => new OrderItemResponseDto
             {
