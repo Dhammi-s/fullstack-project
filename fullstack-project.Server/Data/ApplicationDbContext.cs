@@ -27,6 +27,10 @@ namespace fullstack_project.Server.Data
             base.OnModelCreating(builder);
             builder.Entity<Order>()
              .ToTable(tb => tb.UseSqlOutputClause(false));
+            builder.Entity<Review>()
+                .ToTable(tb => tb.UseSqlOutputClause(false));
+            builder.Entity<Service>()
+                .ToTable(tb => tb.UseSqlOutputClause(false));
             builder.Entity<Order>()
                 .HasOne(o => o.Customer)
                 .WithMany(u => u.Orders)
