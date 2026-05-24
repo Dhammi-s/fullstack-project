@@ -19,11 +19,14 @@ namespace fullstack_project.Server.Data
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<WorkerAvailability> WorkerAvailabilities { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
+            builder.Entity<Order>()
+             .ToTable(tb => tb.UseSqlOutputClause(false));
             builder.Entity<Order>()
                 .HasOne(o => o.Customer)
                 .WithMany(u => u.Orders)

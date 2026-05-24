@@ -8,6 +8,7 @@ using fullstack_project.Server.Data;
 using fullstack_project.Server.Hubs;
 using fullstack_project.Server.Models;
 using fullstack_project.Server.Services;
+using fullstack_project.Server.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -127,6 +128,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseMiddleware<ApiLoggingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
