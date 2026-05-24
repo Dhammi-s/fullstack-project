@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ordersApi } from '../../api/services';
 import { LoadingSpinner, StatusBadge } from '../../components/UI';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, MapPin, Calendar, DollarSign, AlertCircle } from 'lucide-react';
+import { ShoppingCart, MapPin, Calendar, DollarSign, AlertCircle, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function WorkerAssignments() {
@@ -100,6 +100,9 @@ export default function WorkerAssignments() {
                     </button>
                   )}
                   <Link to={`/orders/${order.id}`} className="btn-secondary text-xs py-2">Details</Link>
+                  <Link to={`/invoice/${order.id}`} className="flex items-center gap-1 text-xs bg-gray-800 text-white px-3 py-2 rounded-xl font-semibold hover:bg-gray-900 transition-colors">
+                    <FileText className="w-3.5 h-3.5" /> Invoice
+                  </Link>
                 </div>
               </div>
             </div>

@@ -17,6 +17,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
+import InvoicePage from './pages/InvoicePage';
 import ChatPage from './pages/ChatPage';
 import WorkersPage from './pages/WorkersPage';
 import AboutPage from './pages/AboutPage';
@@ -87,6 +88,7 @@ function App() {
             <Route path="/cart" element={<ProtectedRoute><PublicLayout><CartPage /></PublicLayout></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><PublicLayout><OrdersPage /></PublicLayout></ProtectedRoute>} />
             <Route path="/orders/:id" element={<ProtectedRoute><PublicLayout><OrderDetailPage /></PublicLayout></ProtectedRoute>} />
+            <Route path="/invoice/:id" element={<ProtectedRoute><InvoicePage /></ProtectedRoute>} />
             <Route path="/checkout/:orderId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><PublicLayout><ChatPage /></PublicLayout></ProtectedRoute>} />
             <Route path="/chat/:userId" element={<ProtectedRoute><PublicLayout><ChatPage /></PublicLayout></ProtectedRoute>} />

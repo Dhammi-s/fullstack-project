@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ordersApi, chatApi } from '../api/services';
 import { StatusBadge, LoadingSpinner, EmptyState } from '../components/UI';
-import { Package, Eye, MessageCircle } from 'lucide-react';
+import { Package, Eye, MessageCircle, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function OrdersPage() {
@@ -78,6 +78,10 @@ export default function OrdersPage() {
                   <Link to={`/orders/${order.id}`}
                     className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium text-sm">
                     <Eye className="w-4 h-4" /> View
+                  </Link>
+                  <Link to={`/invoice/${order.id}`}
+                    className="flex items-center gap-1 text-gray-600 hover:text-gray-800 font-medium text-sm">
+                    <FileText className="w-4 h-4" /> Invoice
                   </Link>
                 </div>
               </div>

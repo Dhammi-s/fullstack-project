@@ -4,7 +4,7 @@ import { ordersApi, paymentApi, chatApi, reviewsApi } from '../api/services';
 import { StatusBadge, LoadingSpinner } from '../components/UI';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { ArrowLeft, CreditCard, CheckCircle, MessageCircle, Star, Send } from 'lucide-react';
+import { ArrowLeft, CreditCard, CheckCircle, MessageCircle, Star, Send, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -266,6 +266,10 @@ export default function OrderDetailPage() {
             <h2 className="font-semibold text-gray-800 mb-4">Order Total</h2>
             <div className="text-3xl font-bold text-blue-600">${order.totalAmount}</div>
             <div className="mt-2"><StatusBadge status={order.paymentStatus} /></div>
+            <Link to={`/invoice/${order.id}`}
+              className="mt-4 flex items-center justify-center gap-2 w-full bg-gray-800 hover:bg-gray-900 text-white py-2.5 rounded-xl font-semibold text-sm transition-colors">
+              <FileText className="w-4 h-4" /> View Invoice
+            </Link>
           </div>
 
           {/* Chat with Worker */}
