@@ -31,6 +31,7 @@ const adminLinks = [
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/chat', icon: MessageCircle, label: 'Chat' },
   { to: '/profile', icon: User, label: 'Profile' },
+  { to: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
 
 const workerLinks = [
@@ -42,6 +43,7 @@ const workerLinks = [
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/chat', icon: MessageCircle, label: 'Chat' },
   { to: '/profile', icon: User, label: 'Profile' },
+  { to: '/worker/settings', icon: Settings, label: 'Settings' },
 ];
 
 const customerLinks = [
@@ -53,6 +55,7 @@ const customerLinks = [
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/chat', icon: MessageCircle, label: 'Chat' },
   { to: '/profile', icon: User, label: 'Profile' },
+  { to: '/customer/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function DashboardLayout() {

@@ -9,6 +9,7 @@ namespace fullstack_project.Server.Models
         public string PaymentStatus { get; set; } = "Pending"; // Pending, Paid, Failed, Refunded
         public string? StripePaymentIntentId { get; set; }
         public string? StripeSessionId { get; set; }
+        public string PaymentMethod { get; set; } = "Online"; // Online, COD
         public string OrderType { get; set; } = "Product"; // Product, Service
         public string? Notes { get; set; }
         public string? Address { get; set; }

@@ -43,6 +43,8 @@ export const ordersApi = {
   get: (id) => api.get(`/orders/${id}`),
   create: (data) => api.post('/orders', data),
   updateStatus: (id, status) => api.put(`/orders/${id}/status`, JSON.stringify(status), { headers: { 'Content-Type': 'application/json' } }),
+  assignWorker: (id, workerId) => api.put(`/orders/${id}/assign-worker`, { workerId }),
+  getScheduled: () => api.get('/orders/scheduled'),
   cancel: (id) => api.delete(`/orders/${id}`),
 };
 
@@ -82,3 +84,10 @@ export const notificationsApi = {
   markRead: (id) => api.put(`/notifications/${id}/read`),
   markAllRead: () => api.put('/notifications/read-all'),
 };
+
+export const settingsApi = {
+  get: () => api.get('/settings'),
+  getPublic: () => api.get('/settings/public'),
+  update: (data) => api.put('/settings', data),
+};
+

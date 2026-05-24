@@ -47,6 +47,9 @@ import WorkerAssignments from './pages/worker/WorkerAssignments';
 import WorkerSchedule from './pages/worker/WorkerSchedule';
 import WorkerServices from './pages/worker/WorkerServices';
 import WorkerEarnings from './pages/worker/WorkerEarnings';
+import WorkerSettings from './pages/worker/WorkerSettings';
+import AdminSettings from './pages/admin/AdminSettings';
+import CustomerSettings from './pages/dashboards/CustomerSettings';
 
 // Layout wrapper for public pages (Navbar + Footer)
 function PublicLayout({ children }) {
@@ -86,6 +89,7 @@ function App() {
             <Route path="/orders/:id" element={<ProtectedRoute><PublicLayout><OrderDetailPage /></PublicLayout></ProtectedRoute>} />
             <Route path="/checkout/:orderId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><PublicLayout><ChatPage /></PublicLayout></ProtectedRoute>} />
+            <Route path="/chat/:userId" element={<ProtectedRoute><PublicLayout><ChatPage /></PublicLayout></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><PublicLayout><NotificationsPage /></PublicLayout></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><PublicLayout><ProfilePage /></PublicLayout></ProtectedRoute>} />
 
@@ -98,6 +102,7 @@ function App() {
               <Route path="services" element={<AdminServices />} />
               <Route path="categories" element={<AdminCategories />} />
               <Route path="reviews" element={<AdminReviews />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
 
             {/* Worker Dashboard Routes */}
@@ -107,11 +112,13 @@ function App() {
               <Route path="schedule" element={<WorkerSchedule />} />
               <Route path="services" element={<WorkerServices />} />
               <Route path="earnings" element={<WorkerEarnings />} />
+              <Route path="settings" element={<WorkerSettings />} />
             </Route>
 
             {/* Customer Dashboard Routes */}
             <Route path="/customer" element={<ProtectedRoute roles={['Customer']}><DashboardLayout /></ProtectedRoute>}>
               <Route index element={<CustomerDashboard />} />
+              <Route path="settings" element={<CustomerSettings />} />
             </Route>
 
             {/* 404 */}

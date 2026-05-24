@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DailyNeeds – UI Flow Tester</title>
+<style>
+/* ─── Reset & Variables ─────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;
+  --text:#0f172a;--muted:#64748b;--accent:#6366f1;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+  --sidebar:220px;--header:56px;
+}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh}
+
+/* ─── Header ────────────────────────────────────────────────────── */
+#top-bar{height:var(--header);background:#1e1b4b;display:flex;align-items:center;gap:12px;padding:0 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px #0004}
+#top-bar .logo{color:#fff;font-weight:700;font-size:1.05rem;letter-spacing:.03em}
+#top-bar .badge{background:#6366f1;color:#fff;font-size:.7rem;padding:2px 8px;border-radius:20px}
+#top-bar .spacer{flex:1}
+#login-status{color:#94a3b8;font-size:.8rem}
+#login-status .name{color:#a5f3fc;font-weight:600}
+.btn-logout{background:#7f1d1d;color:#fca5a5;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:.78rem}
+.btn-logout:hover{background:#991b1b}
+
+/* ─── Layout ────────────────────────────────────────────────────── */
+#shell{display:flex;flex:1}
+
+/* ─── Sidebar ───────────────────────────────────────────────────── */
+#sidebar{width:var(--sidebar);background:#1e1b4b;padding:12px 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto;min-height:calc(100vh - var(--header))}
+.nav-group-label{color:#6366f1;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:12px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;color:#94a3b8;font-size:.82rem;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:#312e81;color:#e0e7ff}
+.nav-item.active{background:#312e81;color:#fff;border-left-color:#6366f1}
+.nav-item .icon{font-size:1rem;width:20px;text-align:center}
+
+/* ─── Main Area ─────────────────────────────────────────────────── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#panel-area{flex:1;overflow-y:auto;padding:20px}
+.panel{display:none}
+.panel.active{display:block}
+.panel-title{font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* ─── Cards / Sections ──────────────────────────────────────────── */
+.card{background:var(--surface);border-radius:10px;padding:20px;box-shadow:0 1px 3px #0001;margin-bottom:16px;border:1px solid var(--border)}
+.card-title{font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.flow-steps{display:flex;flex-direction:column;gap:4px;margin-bottom:16px}
+.step{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.82rem;color:var(--muted);counter-increment:step;display:flex;align-items:center;gap:8px}
+.step::before{content:counter(step);min-width:22px;height:22px;background:#6366f1;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+.steps-counter{counter-reset:step}
+
+/* ─── Form Row ──────────────────────────────────────────────────── */
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px}
+.field label{font-size:.72rem;color:var(--muted);font-weight:600}
+input,select,textarea{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--surface);color:var(--text);width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:60px}
+
+/* ─── Buttons ───────────────────────────────────────────────────── */
+.btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.85}
+.btn-primary{background:#6366f1;color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-yellow{background:#d97706;color:#fff}
+.btn-blue{background:#2563eb;color:#fff}
+.btn-ghost{background:var(--border);color:var(--text)}
+.btn-sm{padding:5px 10px;font-size:.75rem}
+
+/* ─── Method badge ──────────────────────────────────────────────── */
+.method{font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0}
+.GET{background:#dbeafe;color:#1d4ed8}
+.POST{background:#dcfce7;color:#15803d}
+.PUT{background:#fef9c3;color:#92400e}
+.DELETE{background:#fee2e2;color:#b91c1c}
+
+/* ─── Response Pane ─────────────────────────────────────────────── */
+#res-pane{background:#0f172a;border-top:1px solid #1e293b;padding:0}
+#res-header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:#1e293b;cursor:pointer;user-select:none}
+#res-header span{color:#94a3b8;font-size:.82rem;font-weight:600;flex:1}
+#res-status{font-size:.75rem;padding:2px 8px;border-radius:4px;font-weight:700}
+.res-ok{background:#14532d;color:#4ade80}
+.res-err{background:#7f1d1d;color:#f87171}
+.res-pending{background:#1e3a5f;color:#93c5fd}
+#res-body{max-height:260px;overflow-y:auto;padding:12px 16px;font-size:.75rem;color:#e2e8f0;white-space:pre-wrap;word-break:break-all;display:none}
+#res-body.open{display:block}
+#res-path{color:#6366f1;font-size:.72rem}
+.btn-copy{background:#334155;color:#94a3b8;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:.7rem}
+
+/* ─── Stat Grid ─────────────────────────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.stat-card .val{font-size:1.4rem;font-weight:700;color:var(--accent)}
+.stat-card .lbl{font-size:.72rem;color:var(--muted);margin-top:4px}
+
+/* ─── Table ─────────────────────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:600}
+.pill-green{background:#dcfce7;color:#16a34a}
+.pill-yellow{background:#fef9c3;color:#92400e}
+.pill-red{background:#fee2e2;color:#dc2626}
+.pill-blue{background:#dbeafe;color:#1d4ed8}
+.pill-gray{background:#f1f5f9;color:#64748b}
+
+/* ─── Notifications ─────────────────────────────────────────────── */
+.notif-list{display:flex;flex-direction:column;gap:8px}
+.notif-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.notif-item.unread{border-left:3px solid var(--accent)}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.notif-body .title{font-size:.85rem;font-weight:600}
+.notif-body .msg{font-size:.78rem;color:var(--muted);margin-top:2px}
+.notif-body .time{font-size:.7rem;color:var(--border);margin-top:4px}
+
+/* ─── Live data items ───────────────────────────────────────────── */
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.item-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.item-card img{width:100%;height:120px;object-fit:cover;background:#f1f5f9}
+.item-card .item-info{padding:10px}
+.item-card .item-name{font-size:.85rem;font-weight:600}
+.item-card .item-price{color:var(--accent);font-weight:700;font-size:.9rem;margin-top:4px}
+.item-card .item-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.item-card .item-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+/* ─── Auth Panel ────────────────────────────────────────────────── */
+.login-card{max-width:420px;margin:0 auto}
+.role-tabs{display:flex;gap:4px;margin-bottom:20px;background:#f1f5f9;border-radius:8px;padding:4px}
+.role-tab{flex:1;padding:8px;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600;background:transparent;color:var(--muted);transition:all .15s}
+.role-tab.active{background:#fff;color:var(--accent);box-shadow:0 1px 3px #0001}
+.divider{text-align:center;color:var(--muted);font-size:.78rem;margin:12px 0;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+.divider::before{left:0}.divider::after{right:0}
+
+/* ─── Toast ─────────────────────────────────────────────────────── */
+#toast{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:6px}
+.toast-item{background:#1e1b4b;color:#e0e7ff;padding:10px 16px;border-radius:8px;font-size:.82rem;max-width:320px;border-left:3px solid #6366f1;animation:slide-in .2s ease;box-shadow:0 4px 12px #0004}
+.toast-item.err{border-left-color:#ef4444;background:#450a0a;color:#fca5a5}
+.toast-item.ok{border-left-color:#22c55e;background:#052e16;color:#86efac}
+@keyframes slide-in{from{transform:translateX(80px);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ TOP BAR ══════════════════ -->
+<div id="top-bar">
+  <div class="logo">🏠 DailyNeeds</div>
+  <div class="badge">UI Tester</div>
+  <div class="spacer"></div>
+  <div id="login-status">Not logged in</div>
+  <button class="btn-logout" onclick="logout()" style="display:none" id="btn-logout">Logout</button>
+</div>
+
+<!-- ══════════════════ SHELL ══════════════════ -->
+<div id="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav id="sidebar">
+    <div class="nav-group-label">Start Here</div>
+    <div class="nav-item active" data-panel="auth" onclick="switchPanel('auth')">
+      <span class="icon">🔐</span>Login / Register
+    </div>
+
+    <div class="nav-group-label">👤 Customer Flow</div>
+    <div class="nav-item" data-panel="c-browse" onclick="switchPanel('c-browse')">
+      <span class="icon">🔍</span>Browse Services
+    </div>
+    <div class="nav-item" data-panel="c-products" onclick="switchPanel('c-products')">
+      <span class="icon">🛒</span>Browse Products
+    </div>
+    <div class="nav-item" data-panel="c-cart" onclick="switchPanel('c-cart')">
+      <span class="icon">🛍</span>Cart & Checkout
+    </div>
+    <div class="nav-item" data-panel="c-orders" onclick="switchPanel('c-orders')">
+      <span class="icon">📋</span>My Orders
+    </div>
+    <div class="nav-item" data-panel="c-reviews" onclick="switchPanel('c-reviews')">
+      <span class="icon">⭐</span>Reviews
+    </div>
+    <div class="nav-item" data-panel="c-profile" onclick="switchPanel('c-profile')">
+      <span class="icon">👤</span>Profile
+    </div>
+    <div class="nav-item" data-panel="notifications" onclick="switchPanel('notifications')">
+      <span class="icon">🔔</span>Notifications
+    </div>
+
+    <div class="nav-group-label">🔧 Worker Flow</div>
+    <div class="nav-item" data-panel="w-dash" onclick="switchPanel('w-dash')">
+      <span class="icon">📊</span>Worker Dashboard
+    </div>
+    <div class="nav-item" data-panel="w-services" onclick="switchPanel('w-services')">
+      <span class="icon">🛠</span>My Services
+    </div>
+    <div class="nav-item" data-panel="w-orders" onclick="switchPanel('w-orders')">
+      <span class="icon">📦</span>Assigned Orders
+    </div>
+    <div class="nav-item" data-panel="w-profile" onclick="switchPanel('w-profile')">
+      <span class="icon">✏️</span>Worker Profile
+    </div>
+
+    <div class="nav-group-label">🛡 Admin Flow</div>
+    <div class="nav-item" data-panel="a-dash" onclick="switchPanel('a-dash')">
+      <span class="icon">📊</span>Admin Dashboard
+    </div>
+    <div class="nav-item" data-panel="a-users" onclick="switchPanel('a-users')">
+      <span class="icon">👥</span>Manage Users
+    </div>
+    <div class="nav-item" data-panel="a-categories" onclick="switchPanel('a-categories')">
+      <span class="icon">📁</span>Categories
+    </div>
+    <div class="nav-item" data-panel="a-services" onclick="switchPanel('a-services')">
+      <span class="icon">🔧</span>Services
+    </div>
+    <div class="nav-item" data-panel="a-products" onclick="switchPanel('a-products')">
+      <span class="icon">📦</span>Products
+    </div>
+    <div class="nav-item" data-panel="a-orders" onclick="switchPanel('a-orders')">
+      <span class="icon">🗂</span>All Orders
+    </div>
+    <div class="nav-item" data-panel="a-reviews" onclick="switchPanel('a-reviews')">
+      <span class="icon">⭐</span>Reviews
+    </div>
+    <div class="nav-item" data-panel="workers-list" onclick="switchPanel('workers-list')">
+      <span class="icon">🧑‍🔧</span>Workers List
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+    <div id="panel-area">
+
+      <!-- ════════ AUTH ════════ -->
+      <div class="panel active" id="panel-auth">
+        <div class="panel-title">🔐 Login / Register</div>
+        <div class="login-card">
+
+          <!-- Quick login -->
+          <div class="card">
+            <div class="card-title">⚡ Quick Login (Seeded Accounts)</div>
+            <div class="role-tabs">
+              <button class="role-tab active" onclick="quickFill('admin@dailyneeds.com','Admin@123456',this)">Admin</button>
+              <button class="role-tab" onclick="quickFill('worker@dailyneeds.com','Worker@123456',this)">Worker</button>
+              <button class="role-tab" onclick="quickFill('customer@dailyneeds.com','Customer@123456',this)">Customer</button>
+            </div>
+            <div class="row">
+              <div class="field"><label>Email</label><input id="l-email" type="email" value="admin@dailyneeds.com"/></div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Password</label><input id="l-pass" type="password" value="Admin@123456"/></div>
+              <button class="btn btn-primary" onclick="doLogin()">Login →</button>
+            </div>
+          </div>
+
+          <div class="divider">or register a new account</div>
+
+          <!-- Register -->
+          <div class="card">
+            <div class="card-title">✍️ Register</div>
+            <div class="row">
+              <div class="field"><label>Full Name</label><input id="r-name" placeholder="Jane Doe"/></div>
+              <div class="field"><label>Email</label><input id="r-email" type="email" placeholder="jane@example.com"/></div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Password</label><input id="r-pass" type="password" placeholder="Min 6 chars, 1 digit"/></div>
+              <button class="btn btn-green" onclick="doRegister()">Register</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ CUSTOMER: BROWSE SERVICES ════════ -->
+      <div class="panel" id="panel-c-browse">
+        <div class="panel-title">🔍 Browse Services</div>
+        <div class="card">
+          <div class="card-title">🔎 Filter</div>
+          <div class="row">
+            <div class="field"><label>Search</label><input id="svc-search" placeholder="e.g. plumbing"/></div>
+            <div class="field"><label>Category ID</label><input id="svc-catfilter" type="number" placeholder="leave blank = all"/></div>
+            <button class="btn btn-primary" onclick="loadServices()">Search</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 Results <button class="btn btn-ghost btn-sm" onclick="loadServices()">↻ Refresh</button></div>
+          <div id="svc-list" class="item-grid"></div>
+        </div>
+        <!-- Book a service -->
+        <div class="card">
+          <div class="card-title">📅 Book a Service (creates order)</div>
+          <div class="steps-counter flow-steps">
+            <div class="step">Pick a service above → copy its ID below</div>
+            <div class="step">Fill optional details and click Book</div>
+            <div class="step">Order appears in My Orders panel</div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Service ID</label><input id="book-svc-id" type="number" placeholder="from list above"/></div>
+            <div class="field"><label>Worker ID (optional)</label><input id="book-worker-id" placeholder="user id"/></div>
+            <div class="field"><label>Address</label><input id="book-address" placeholder="Your address"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Scheduled Date</label><input id="book-date" type="datetime-local"/></div>
+            <div class="field"><label>Notes</label><input id="book-notes" placeholder="any special requests"/></div>
+            <button class="btn btn-green" onclick="bookService()">Book Service</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ CUSTOMER: PRODUCTS ════════ -->
+      <div class="panel" id="panel-c-products">
+        <div class="panel-title">🛒 Browse Products</div>
+        <div class="card">
+          <div class="card-title">🔎 Filter</div>
+          <div class="row">
+            <div class="field"><label>Search</label><input id="prod-search" placeholder="e.g. wrench"/></div>
+            <div class="field"><label>Min Price</label><input id="prod-min" type="number" placeholder="0"/></div>
+            <div class="field"><label>Max Price</label><input id="prod-max" type="number" placeholder="9999"/></div>
+            <div class="field"><label>Category ID</label><input id="prod-cat" type="number"/></div>
+            <button class="btn btn-primary" onclick="loadProducts()">Search</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 Results <button class="btn btn-ghost btn-sm" onclick="loadProducts()">↻ Refresh</button></div>
+          <div id="prod-list" class="item-grid"></div>
+        </div>
+      </div>
+
+      <!-- ════════ CUSTOMER: CART ════════ -->
+      <div class="panel" id="panel-c-cart">
+        <div class="panel-title">🛍 Cart & Checkout</div>
+        <div class="steps-counter flow-steps" style="margin-bottom:16px">
+          <div class="step">Add products or services to cart using the buttons below</div>
+          <div class="step">View cart – verify items & total</div>
+          <div class="step">Checkout → creates a Product order</div>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ Add Item to Cart</div>
+          <div class="row">
+            <div class="field"><label>Product ID</label><input id="cart-prod-id" type="number" placeholder="from Products panel"/></div>
+            <div class="field"><label>OR Service ID</label><input id="cart-svc-id" type="number"/></div>
+            <div class="field"><label>Qty</label><input id="cart-qty" type="number" value="1" min="1"/></div>
+            <button class="btn btn-green" onclick="addToCart()">Add to Cart</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🛒 Current Cart <button class="btn btn-ghost btn-sm" onclick="loadCart()">↻ Refresh</button></div>
+          <div id="cart-view"></div>
+          <div class="row" style="margin-top:12px">
+            <div class="field"><label>Remove item ID</label><input id="cart-remove-id" type="number" placeholder="cart item id"/></div>
+            <button class="btn btn-red btn-sm" onclick="removeFromCart()">Remove</button>
+            <button class="btn btn-red" onclick="clearCart()">Clear Cart</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">💳 Checkout (creates order from cart)</div>
+          <div class="row">
+            <div class="field"><label>Delivery Address</label><input id="co-address" placeholder="123 Main St"/></div>
+            <div class="field"><label>Notes</label><input id="co-notes" placeholder="optional"/></div>
+            <button class="btn btn-primary" onclick="checkout()">Checkout →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ CUSTOMER: ORDERS ════════ -->
+      <div class="panel" id="panel-c-orders">
+        <div class="panel-title">📋 My Orders</div>
+        <div class="card">
+          <div class="card-title">📦 Order List <button class="btn btn-ghost btn-sm" onclick="loadMyOrders()">↻ Refresh</button></div>
+          <div id="my-orders-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 View Order Detail</div>
+          <div class="row">
+            <div class="field"><label>Order ID</label><input id="ord-detail-id" type="number"/></div>
+            <button class="btn btn-primary" onclick="loadOrderDetail()">Load</button>
+          </div>
+          <div id="ord-detail-view" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">❌ Cancel Order</div>
+          <div class="row">
+            <div class="field"><label>Order ID</label><input id="cancel-ord-id" type="number"/></div>
+            <button class="btn btn-red" onclick="cancelOrder()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ CUSTOMER: REVIEWS ════════ -->
+      <div class="panel" id="panel-c-reviews">
+        <div class="panel-title">⭐ Reviews</div>
+        <div class="card">
+          <div class="card-title">📖 View Reviews</div>
+          <div class="row">
+            <div class="field"><label>Service ID</label><input id="rv-svc-id" type="number" placeholder="optional"/></div>
+            <div class="field"><label>Product ID</label><input id="rv-prod-id" type="number" placeholder="optional"/></div>
+            <div class="field"><label>Worker ID</label><input id="rv-worker-id" placeholder="optional"/></div>
+            <button class="btn btn-primary" onclick="loadReviews()">Load</button>
+          </div>
+          <div id="reviews-list" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✍️ Submit Review</div>
+          <div class="steps-counter flow-steps">
+            <div class="step">Complete an order first (status must be Completed)</div>
+            <div class="step">Fill in order ID, rating and optional service/product/worker ID</div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Order ID</label><input id="rv-ord-id" type="number"/></div>
+            <div class="field"><label>Rating (1-5)</label><input id="rv-rating" type="number" min="1" max="5" value="5"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Service ID (optional)</label><input id="rv-new-svc" type="number"/></div>
+            <div class="field"><label>Product ID (optional)</label><input id="rv-new-prod" type="number"/></div>
+            <div class="field"><label>Worker ID (optional)</label><input id="rv-new-worker"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Comment</label><textarea id="rv-comment" placeholder="Share your experience..."></textarea></div>
+            <button class="btn btn-green" style="align-self:flex-end" onclick="submitReview()">Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ CUSTOMER: PROFILE ════════ -->
+      <div class="panel" id="panel-c-profile">
+        <div class="panel-title">👤 My Profile</div>
+        <div class="card">
+          <div class="card-title">📄 Current Profile <button class="btn btn-ghost btn-sm" onclick="loadProfile()">↻ Load</button></div>
+          <div id="profile-view"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✏️ Update Profile</div>
+          <div class="row">
+            <div class="field"><label>Full Name</label><input id="p-name" placeholder="Your name"/></div>
+            <div class="field"><label>Phone</label><input id="p-phone" placeholder="+1 234 567"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Address</label><input id="p-address" placeholder="Your address"/></div>
+            <div class="field"><label>Profile Image URL</label><input id="p-img" placeholder="https://..."/></div>
+          </div>
+          <button class="btn btn-green" onclick="updateProfile()">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- ════════ NOTIFICATIONS ════════ -->
+      <div class="panel" id="panel-notifications">
+        <div class="panel-title">🔔 Notifications</div>
+        <div class="card">
+          <div class="card-title">
+            Inbox
+            <button class="btn btn-ghost btn-sm" onclick="loadNotifs()">↻ Refresh</button>
+            <button class="btn btn-yellow btn-sm" onclick="markAllRead()">Mark All Read</button>
+          </div>
+          <div id="notif-list" class="notif-list"></div>
+        </div>
+      </div>
+
+      <!-- ════════ WORKER: DASHBOARD ════════ -->
+      <div class="panel" id="panel-w-dash">
+        <div class="panel-title">📊 Worker Dashboard</div>
+        <div class="card">
+          <div class="card-title">📈 Stats <button class="btn btn-ghost btn-sm" onclick="loadWorkerDash()">↻ Refresh</button></div>
+          <div id="worker-stats" class="stat-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🕒 Recent Orders</div>
+          <div id="worker-recent-orders"></div>
+        </div>
+      </div>
+
+      <!-- ════════ WORKER: SERVICES ════════ -->
+      <div class="panel" id="panel-w-services">
+        <div class="panel-title">🛠 My Services</div>
+        <div class="steps-counter flow-steps" style="margin-bottom:16px">
+          <div class="step">Create a service – it goes live immediately for customers to book</div>
+          <div class="step">Edit or delete your services any time</div>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ Create Service</div>
+          <div class="row">
+            <div class="field"><label>Title</label><input id="ws-title" placeholder="e.g. Leak Repair"/></div>
+            <div class="field"><label>Price ($)</label><input id="ws-price" type="number" value="50"/></div>
+            <div class="field"><label>Price Type</label>
+              <select id="ws-price-type"><option>Fixed</option><option>Hourly</option></select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Category ID</label><input id="ws-cat" type="number" placeholder="1"/></div>
+            <div class="field"><label>Image URL</label><input id="ws-img" placeholder="https://..."/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Description</label><textarea id="ws-desc" placeholder="Describe your service..."></textarea></div>
+            <button class="btn btn-green" style="align-self:flex-end" onclick="workerCreateService()">Create</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 All Services <button class="btn btn-ghost btn-sm" onclick="loadServices()">↻ Refresh</button></div>
+          <div id="worker-svc-list" class="item-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✏️ Edit / Delete Service</div>
+          <div class="row">
+            <div class="field"><label>Service ID</label><input id="ws-edit-id" type="number"/></div>
+            <div class="field"><label>New Title</label><input id="ws-edit-title"/></div>
+            <div class="field"><label>New Price</label><input id="ws-edit-price" type="number"/></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-yellow" onclick="workerUpdateService()">Save Edit</button>
+            <button class="btn btn-red" onclick="workerDeleteService()">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ WORKER: ORDERS ════════ -->
+      <div class="panel" id="panel-w-orders">
+        <div class="panel-title">📦 Assigned Orders</div>
+        <div class="card">
+          <div class="card-title">🗂 My Order Queue <button class="btn btn-ghost btn-sm" onclick="loadMyOrders()">↻ Refresh</button></div>
+          <div id="worker-orders-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔄 Update Order Status</div>
+          <div class="steps-counter flow-steps">
+            <div class="step">Pending → InProgress (you start the job)</div>
+            <div class="step">InProgress → Completed (you finish the job)</div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Order ID</label><input id="wo-ord-id" type="number"/></div>
+            <div class="field"><label>New Status</label>
+              <select id="wo-status">
+                <option>Pending</option>
+                <option>InProgress</option>
+                <option>Completed</option>
+                <option>Cancelled</option>
+              </select>
+            </div>
+            <button class="btn btn-yellow" onclick="workerUpdateOrderStatus()">Update Status</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ WORKER: PROFILE ════════ -->
+      <div class="panel" id="panel-w-profile">
+        <div class="panel-title">✏️ Worker Profile</div>
+        <div class="card">
+          <div class="card-title">📄 Current Profile <button class="btn btn-ghost btn-sm" onclick="loadProfile()">↻ Load</button></div>
+          <div id="worker-profile-view"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✏️ Update Worker Info</div>
+          <div class="row">
+            <div class="field"><label>Full Name</label><input id="wp-name"/></div>
+            <div class="field"><label>Phone</label><input id="wp-phone"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Skills (comma-separated)</label><input id="wp-skills" placeholder="Plumbing, Electrical"/></div>
+            <div class="field"><label>Hourly Rate ($)</label><input id="wp-rate" type="number"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Bio</label><textarea id="wp-bio" placeholder="Tell customers about yourself..."></textarea></div>
+          </div>
+          <div class="row">
+            <label style="display:flex;align-items:center;gap:6px;font-size:.85rem">
+              <input type="checkbox" id="wp-available"/> Available for work
+            </label>
+            <button class="btn btn-green" onclick="workerUpdateProfile()">Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN: DASHBOARD ════════ -->
+      <div class="panel" id="panel-a-dash">
+        <div class="panel-title">📊 Admin Dashboard</div>
+        <div class="card">
+          <div class="card-title">📈 Platform Stats <button class="btn btn-ghost btn-sm" onclick="loadAdminDash()">↻ Refresh</button></div>
+          <div id="admin-stats" class="stat-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🕒 Recent Orders</div>
+          <div id="admin-recent-orders"></div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN: USERS ════════ -->
+      <div class="panel" id="panel-a-users">
+        <div class="panel-title">👥 Manage Users</div>
+        <div class="card">
+          <div class="card-title">📋 All Users <button class="btn btn-ghost btn-sm" onclick="loadAllUsers()">↻ Load</button></div>
+          <div id="admin-users-table"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 Get User by ID</div>
+          <div class="row">
+            <div class="field"><label>User ID</label><input id="admin-user-id" placeholder="guid string"/></div>
+            <button class="btn btn-primary" onclick="adminGetUser()">Load</button>
+          </div>
+          <div id="admin-user-detail" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔄 Toggle User Active/Inactive</div>
+          <div class="row">
+            <div class="field"><label>User ID</label><input id="admin-toggle-id" placeholder="guid string"/></div>
+            <button class="btn btn-yellow" onclick="adminToggleUser()">Toggle Status</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN: CATEGORIES ════════ -->
+      <div class="panel" id="panel-a-categories">
+        <div class="panel-title">📁 Categories</div>
+        <div class="card">
+          <div class="card-title">📋 All Categories <button class="btn btn-ghost btn-sm" onclick="loadCategories()">↻ Refresh</button></div>
+          <div id="admin-cat-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ Create Category</div>
+          <div class="row">
+            <div class="field"><label>Name</label><input id="ac-name" placeholder="Plumbing"/></div>
+            <div class="field"><label>Description</label><input id="ac-desc" placeholder="All plumbing services"/></div>
+            <div class="field"><label>Icon</label><input id="ac-icon" placeholder="🔧" value="📦"/></div>
+            <div class="field"><label>Image URL</label><input id="ac-img" placeholder="https://..."/></div>
+            <button class="btn btn-green" onclick="adminCreateCategory()">Create</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">✏️ Edit / Delete Category</div>
+          <div class="row">
+            <div class="field"><label>ID</label><input id="ac-edit-id" type="number"/></div>
+            <div class="field"><label>Name</label><input id="ac-edit-name"/></div>
+            <div class="field"><label>Description</label><input id="ac-edit-desc"/></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-yellow" onclick="adminUpdateCategory()">Save Edit</button>
+            <button class="btn btn-red" onclick="adminDeleteCategory()">Delete (soft)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN: SERVICES ════════ -->
+      <div class="panel" id="panel-a-services">
+        <div class="panel-title">🔧 Manage Services</div>
+        <div class="card">
+          <div class="card-title">📋 All Services <button class="btn btn-ghost btn-sm" onclick="loadServices()">↻ Refresh</button></div>
+          <div id="admin-svc-table"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ Create Service (as Admin)</div>
+          <div class="row">
+            <div class="field"><label>Title</label><input id="as-title" placeholder="Pipe Repair"/></div>
+            <div class="field"><label>Price ($)</label><input id="as-price" type="number" value="80"/></div>
+            <div class="field"><label>Category ID</label><input id="as-cat" type="number" placeholder="1"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Description</label><textarea id="as-desc"></textarea></div>
+            <button class="btn btn-green" style="align-self:flex-end" onclick="adminCreateService()">Create</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🗑 Delete Service</div>
+          <div class="row">
+            <div class="field"><label>Service ID</label><input id="as-del-id" type="number"/></div>
+            <button class="btn btn-red" onclick="adminDeleteService()">Delete (soft)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN: PRODUCTS ════════ -->
+      <div class="panel" id="panel-a-products">
+        <div class="panel-title">📦 Manage Products</div>
+        <div class="card">
+          <div class="card-title">📋 All Products <button class="btn btn-ghost btn-sm" onclick="loadProducts()">↻ Refresh</button></div>
+          <div id="admin-prod-table"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ Create Product</div>
+          <div class="row">
+            <div class="field"><label>Name</label><input id="ap-name" placeholder="Wrench Set"/></div>
+            <div class="field"><label>Price ($)</label><input id="ap-price" type="number" value="25"/></div>
+            <div class="field"><label>Stock</label><input id="ap-stock" type="number" value="100"/></div>
+            <div class="field"><label>Brand</label><input id="ap-brand" placeholder="Stanley"/></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Category ID</label><input id="ap-cat" type="number" placeholder="1"/></div>
+            <div class="field"><label>Image URL</label><input id="ap-img" placeholder="https://..."/></div>
+            <div class="field"><label>Description</label><input id="ap-desc" placeholder="Product description"/></div>
+          </div>
+          <button class="btn btn-green" onclick="adminCreateProduct()">Create Product</button>
+        </div>
+        <div class="card">
+          <div class="card-title">✏️ Edit / Delete Product</div>
+          <div class="row">
+            <div class="field"><label>Product ID</label><input id="ap-edit-id" type="number"/></div>
+            <div class="field"><label>New Name</label><input id="ap-edit-name"/></div>
+            <div class="field"><label>New Price</label><input id="ap-edit-price" type="number"/></div>
+            <div class="field"><label>New Stock</label><input id="ap-edit-stock" type="number"/></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-yellow" onclick="adminUpdateProduct()">Save Edit</button>
+            <button class="btn btn-red" onclick="adminDeleteProduct()">Delete (soft)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN: ORDERS ════════ -->
+      <div class="panel" id="panel-a-orders">
+        <div class="panel-title">🗂 All Orders (Admin)</div>
+        <div class="card">
+          <div class="card-title">📋 Order List <button class="btn btn-ghost btn-sm" onclick="loadAllOrders()">↻ Refresh</button></div>
+          <div id="admin-orders-table"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔄 Update Order Status</div>
+          <div class="row">
+            <div class="field"><label>Order ID</label><input id="ao-id" type="number"/></div>
+            <div class="field"><label>Status</label>
+              <select id="ao-status">
+                <option>Pending</option><option>InProgress</option>
+                <option>Completed</option><option>Cancelled</option>
+              </select>
+            </div>
+            <div class="field"><label>Assign Worker ID (optional)</label><input id="ao-worker"/></div>
+            <button class="btn btn-yellow" onclick="adminUpdateOrderStatus()">Update</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN: REVIEWS ════════ -->
+      <div class="panel" id="panel-a-reviews">
+        <div class="panel-title">⭐ All Reviews</div>
+        <div class="card">
+          <div class="card-title">📋 Reviews <button class="btn btn-ghost btn-sm" onclick="loadReviews()">↻ Load All</button></div>
+          <div id="admin-reviews-list"></div>
+        </div>
+      </div>
+
+      <!-- ════════ WORKERS LIST ════════ -->
+      <div class="panel" id="panel-workers-list">
+        <div class="panel-title">🧑‍🔧 Workers Directory</div>
+        <div class="card">
+          <div class="card-title">🔎 Filter Workers</div>
+          <div class="row">
+            <div class="field"><label>Skill</label><input id="wl-skill" placeholder="Plumbing"/></div>
+            <div class="field"><label>Available only</label>
+              <select id="wl-avail"><option value="">All</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+            </div>
+            <button class="btn btn-primary" onclick="loadWorkers()">Search</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">👷 Results</div>
+          <div id="workers-grid" class="item-grid"></div>
+        </div>
+      </div>
+
+    </div><!-- /panel-area -->
+
+    <!-- ── RESPONSE PANE ── -->
+    <div id="res-pane">
+      <div id="res-header" onclick="toggleRes()">
+        <span>🔁 Last Response</span>
+        <span id="res-path" class=""></span>
+        <span id="res-status" class="res-pending">—</span>
+        <button class="btn-copy" onclick="event.stopPropagation();copyRes()">Copy</button>
+      </div>
+      <pre id="res-body">Waiting for a request…</pre>
+    </div>
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let TOKEN   = localStorage.getItem('dn_token') || '';
+let ROLE    = localStorage.getItem('dn_role')  || '';
+let USER_ID = localStorage.getItem('dn_uid')   || '';
+let USER_NAME= localStorage.getItem('dn_name') || '';
+
+// ═══════════════════════════════════════════════════════════
+//  CORE HTTP
+// ═══════════════════════════════════════════════════════════
+async function api(method, path, body=null, isRaw=false){
+  const headers = { Accept:'application/json' };
+  if(TOKEN) headers['Authorization']='Bearer '+TOKEN;
+  let b=null;
+  if(body!==null){
+    headers['Content-Type']='application/json';
+    b = isRaw ? JSON.stringify(body) : JSON.stringify(body);
+  }
+  const url = '/api'+path;
+  document.getElementById('res-path').textContent = method+' '+url;
+  document.getElementById('res-status').textContent='…';
+  document.getElementById('res-status').className='res-pending';
+  try{
+    const r = await fetch(url,{method,headers,body:b});
+    let data;
+    const ct=r.headers.get('content-type')||'';
+    try{ data = ct.includes('json') ? await r.json() : await r.text(); }
+    catch{ data='(empty)'; }
+    showRes(r.status, data);
+    return {ok:r.ok, status:r.status, data};
+  }catch(e){
+    showRes(0,{error:e.message});
+    return {ok:false,status:0,data:{error:e.message}};
+  }
+}
+
+function showRes(status, data){
+  const el = document.getElementById('res-status');
+  const body = document.getElementById('res-body');
+  el.textContent='HTTP '+status;
+  el.className = (status>=200&&status<300)?'res-ok':'res-err';
+  body.textContent = JSON.stringify(data,null,2);
+  body.classList.add('open');
+}
+function toggleRes(){ document.getElementById('res-body').classList.toggle('open'); }
+function copyRes(){ navigator.clipboard.writeText(document.getElementById('res-body').textContent); toast('Copied!'); }
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════
+function toast(msg,type=''){
+  const d=document.createElement('div');
+  d.className='toast-item '+(type==='err'?'err':type==='ok'?'ok':'');
+  d.textContent=msg;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(()=>d.remove(),3500);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════════
+function switchPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id)?.classList.add('active');
+  document.querySelector(`[data-panel="${id}"]`)?.classList.add('active');
+  // auto-load on switch
+  const auto={
+    'c-browse':loadServices,'c-products':loadProducts,'c-cart':loadCart,
+    'c-orders':loadMyOrders,'notifications':loadNotifs,'c-profile':loadProfile,
+    'w-dash':loadWorkerDash,'w-services':()=>{loadServices();},
+    'w-orders':loadMyOrders,'w-profile':loadProfile,
+    'a-dash':loadAdminDash,'a-users':loadAllUsers,'a-categories':loadCategories,
+    'a-services':loadServices,'a-products':loadProducts,'a-orders':loadAllOrders,
+    'a-reviews':loadReviews,'workers-list':loadWorkers,
+  };
+  if(auto[id]) auto[id]();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════
+function quickFill(email,pass,btn){
+  document.getElementById('l-email').value=email;
+  document.getElementById('l-pass').value=pass;
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function doLogin(){
+  const res = await api('POST','/auth/login',{
+    email:val('l-email'), password:val('l-pass')
+  });
+  if(res.ok && res.data.token){
+    TOKEN = res.data.token;
+    ROLE  = res.data.role || '';
+    USER_ID = res.data.userId || '';
+    USER_NAME = res.data.fullName || res.data.email || '';
+    localStorage.setItem('dn_token',TOKEN);
+    localStorage.setItem('dn_role',ROLE);
+    localStorage.setItem('dn_uid',USER_ID);
+    localStorage.setItem('dn_name',USER_NAME);
+    updateLoginBar();
+    toast('Logged in as '+USER_NAME+' ('+ROLE+')','ok');
+  } else {
+    toast('Login failed: '+(res.data?.message||res.data),'err');
+  }
+}
+
+async function doRegister(){
+  const res = await api('POST','/auth/register',{
+    fullName:val('r-name'), email:val('r-email'), password:val('r-pass')
+  });
+  if(res.ok) toast('Registered! Now login.','ok');
+  else toast('Register failed: '+(res.data?.message||JSON.stringify(res.data)),'err');
+}
+
+function logout(){
+  TOKEN=ROLE=USER_ID=USER_NAME='';
+  ['dn_token','dn_role','dn_uid','dn_name'].forEach(k=>localStorage.removeItem(k));
+  updateLoginBar();
+  toast('Logged out');
+}
+
+function updateLoginBar(){
+  const s=document.getElementById('login-status');
+  const b=document.getElementById('btn-logout');
+  if(TOKEN){
+    s.innerHTML=`Logged in as <span class="name">${USER_NAME}</span> · <span class="name">${ROLE}</span>`;
+    b.style.display='';
+  } else {
+    s.textContent='Not logged in';
+    b.style.display='none';
+  }
+}
+updateLoginBar();
+
+// ═══════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════
+const val = id => (document.getElementById(id)||{}).value ?? '';
+const num = id => { const v=val(id); return v===''?undefined:Number(v); };
+
+function statusPill(s){
+  const map={Pending:'yellow',InProgress:'blue',Completed:'green',Cancelled:'red',Paid:'green',Failed:'red'};
+  const cls=map[s]||'gray';
+  return `<span class="pill pill-${cls}">${s}</span>`;
+}
+
+function ordersTable(orders,showEdit=false){
+  if(!orders||!orders.length) return '<p style="color:var(--muted);font-size:.82rem">No orders found.</p>';
+  return `<div class="tbl-wrap"><table>
+    <tr><th>ID</th><th>Order #</th><th>Type</th><th>Status</th><th>Payment</th><th>Total</th><th>Date</th>${showEdit?'<th>Actions</th>':''}</tr>
+    ${orders.map(o=>`<tr>
+      <td>${o.id}</td>
+      <td style="font-weight:600">${o.orderNumber}</td>
+      <td>${o.orderType||''}</td>
+      <td>${statusPill(o.status)}</td>
+      <td>${statusPill(o.paymentStatus||'Pending')}</td>
+      <td style="font-weight:700;color:var(--accent)">$${(o.totalAmount||0).toFixed(2)}</td>
+      <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+      ${showEdit?`<td><button class="btn btn-ghost btn-sm" onclick="prefillOrderStatus(${o.id})">Edit</button></td>`:''}
+    </tr>`).join('')}
+  </table></div>`;
+}
+
+function prefillOrderStatus(id){
+  ['ao-id','wo-ord-id','cancel-ord-id','ord-detail-id'].forEach(i=>{
+    const el=document.getElementById(i);
+    if(el) el.value=id;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SERVICES
+// ═══════════════════════════════════════════════════════════
+let _services=[];
+async function loadServices(){
+  const search=val('svc-search');
+  const cat=val('svc-catfilter');
+  let qs='';
+  if(search) qs+='?search='+encodeURIComponent(search);
+  if(cat) qs+=(qs?'&':'?')+'categoryId='+cat;
+  const res=await api('GET','/services'+qs);
+  if(!res.ok) return;
+  _services=res.data||[];
+  const renderGrid=(containerId,withActions)=>{
+    const el=document.getElementById(containerId);
+    if(!el) return;
+    if(!_services.length){ el.innerHTML='<p style="color:var(--muted)">No services found.</p>'; return; }
+    el.innerHTML=_services.map(s=>`
+      <div class="item-card">
+        <img src="${s.imageUrl||''}" onerror="this.style.display='none'" alt="${s.title}"/>
+        <div class="item-info">
+          <div class="item-name">${s.title}</div>
+          <div class="item-price">$${s.price} <small style="font-weight:400;color:var(--muted)">${s.priceType||''}</small></div>
+          <div class="item-sub">⭐ ${(s.rating||0).toFixed(1)} · ${s.totalReviews||0} reviews</div>
+          <div class="item-sub">Worker: ${s.workerName||s.workerId||'—'}</div>
+          <div class="item-actions">
+            <button class="btn btn-primary btn-sm" onclick="prefillService(${s.id})">Book</button>
+            <button class="btn btn-ghost btn-sm" onclick="addToCartSvc(${s.id})">🛒 Cart</button>
+          </div>
+        </div>
+      </div>`).join('');
+  };
+  renderGrid('svc-list',true);
+  renderGrid('worker-svc-list',true);
+  // admin table
+  const tbl=document.getElementById('admin-svc-table');
+  if(tbl) tbl.innerHTML=`<div class="tbl-wrap"><table>
+    <tr><th>ID</th><th>Title</th><th>Price</th><th>Category</th><th>Worker</th><th>Rating</th></tr>
+    ${_services.map(s=>`<tr>
+      <td>${s.id}</td><td>${s.title}</td>
+      <td>$${s.price}</td><td>${s.categoryName||s.categoryId}</td>
+      <td>${s.workerName||'—'}</td><td>⭐${(s.rating||0).toFixed(1)}</td>
+    </tr>`).join('')}
+  </table></div>`;
+}
+
+function prefillService(id){ document.getElementById('book-svc-id').value=id; switchPanel('c-browse'); }
+function addToCartSvc(id){ document.getElementById('cart-svc-id').value=id; document.getElementById('cart-prod-id').value=''; addToCart(); }
+
+async function bookService(){
+  const body={
+    orderType:'Service',
+    serviceId:num('book-svc-id'),
+    workerId:val('book-worker-id')||undefined,
+    address:val('book-address'),
+    notes:val('book-notes'),
+    scheduledAt:val('book-date')||undefined,
+    items:[]
+  };
+  const res=await api('POST','/orders',body);
+  if(res.ok){ toast('Service booked! Order #'+res.data?.orderNumber,'ok'); switchPanel('c-orders'); }
+  else toast('Booking failed','err');
+}
+
+async function workerCreateService(){
+  const res=await api('POST','/services',{
+    title:val('ws-title'), description:val('ws-desc'),
+    price:num('ws-price'), priceType:val('ws-price-type'),
+    imageUrl:val('ws-img'), categoryId:num('ws-cat')
+  });
+  if(res.ok){ toast('Service created!','ok'); loadServices(); }
+  else toast('Failed: '+JSON.stringify(res.data),'err');
+}
+
+async function workerUpdateService(){
+  const id=num('ws-edit-id');
+  if(!id) return toast('Enter service ID','err');
+  const svc=_services.find(s=>s.id===id)||{};
+  const res=await api('PUT','/services/'+id,{
+    title:val('ws-edit-title')||svc.title,
+    description:svc.description,
+    price:num('ws-edit-price')||svc.price,
+    priceType:svc.priceType||'Fixed',
+    imageUrl:svc.imageUrl,
+    categoryId:svc.categoryId
+  });
+  if(res.ok){ toast('Updated!','ok'); loadServices(); }
+  else toast('Failed','err');
+}
+async function workerDeleteService(){
+  const id=num('ws-edit-id'); if(!id) return toast('Enter ID','err');
+  const res=await api('DELETE','/services/'+id);
+  if(res.ok){ toast('Deleted','ok'); loadServices(); }
+  else toast('Failed','err');
+}
+async function adminCreateService(){
+  const res=await api('POST','/services',{
+    title:val('as-title'), description:val('as-desc'),
+    price:num('as-price'), priceType:'Fixed',
+    imageUrl:'', categoryId:num('as-cat')
+  });
+  if(res.ok){ toast('Service created!','ok'); loadServices(); }
+  else toast('Failed: '+JSON.stringify(res.data),'err');
+}
+async function adminDeleteService(){
+  const id=num('as-del-id'); if(!id) return toast('Enter ID','err');
+  const res=await api('DELETE','/services/'+id);
+  if(res.ok){ toast('Deleted','ok'); loadServices(); }
+  else toast('Failed','err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PRODUCTS
+// ═══════════════════════════════════════════════════════════
+let _products=[];
+async function loadProducts(){
+  let qs='?';
+  const s=val('prod-search'); if(s) qs+='search='+encodeURIComponent(s)+'&';
+  const min=val('prod-min'); if(min) qs+='minPrice='+min+'&';
+  const max=val('prod-max'); if(max) qs+='maxPrice='+max+'&';
+  const cat=val('prod-cat'); if(cat) qs+='categoryId='+cat+'&';
+  const res=await api('GET','/products'+qs);
+  if(!res.ok) return;
+  _products=res.data||[];
+  const renderGrid=(containerId)=>{
+    const el=document.getElementById(containerId);
+    if(!el) return;
+    if(!_products.length){ el.innerHTML='<p style="color:var(--muted)">No products found.</p>'; return; }
+    el.innerHTML=_products.map(p=>`
+      <div class="item-card">
+        <img src="${p.imageUrl||''}" onerror="this.style.display='none'" alt="${p.name}"/>
+        <div class="item-info">
+          <div class="item-name">${p.name}</div>
+          <div class="item-price">$${p.price}</div>
+          <div class="item-sub">${p.brand||''} · Stock: ${p.stock}</div>
+          <div class="item-sub">⭐ ${(p.rating||0).toFixed(1)} · ${p.categoryName||''}</div>
+          <div class="item-actions">
+            <button class="btn btn-green btn-sm" onclick="addToCartProd(${p.id})">🛒 Add</button>
+          </div>
+        </div>
+      </div>`).join('');
+  };
+  renderGrid('prod-list');
+  // admin table
+  const tbl=document.getElementById('admin-prod-table');
+  if(tbl) tbl.innerHTML=`<div class="tbl-wrap"><table>
+    <tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Brand</th><th>Category</th><th>Rating</th></tr>
+    ${_products.map(p=>`<tr>
+      <td>${p.id}</td><td>${p.name}</td><td>$${p.price}</td>
+      <td>${p.stock}</td><td>${p.brand||'—'}</td>
+      <td>${p.categoryName||p.categoryId}</td><td>⭐${(p.rating||0).toFixed(1)}</td>
+    </tr>`).join('')}
+  </table></div>`;
+}
+
+function addToCartProd(id){ document.getElementById('cart-prod-id').value=id; document.getElementById('cart-svc-id').value=''; addToCart(); }
+
+async function adminCreateProduct(){
+  const res=await api('POST','/products',{
+    name:val('ap-name'),description:val('ap-desc'),
+    price:num('ap-price'),stock:num('ap-stock'),
+    brand:val('ap-brand'),imageUrl:val('ap-img'),
+    categoryId:num('ap-cat')
+  });
+  if(res.ok){ toast('Product created!','ok'); loadProducts(); }
+  else toast('Failed: '+JSON.stringify(res.data),'err');
+}
+async function adminUpdateProduct(){
+  const id=num('ap-edit-id'); if(!id) return toast('Enter ID','err');
+  const p=_products.find(x=>x.id===id)||{};
+  const res=await api('PUT','/products/'+id,{
+    name:val('ap-edit-name')||p.name,
+    description:p.description,
+    price:num('ap-edit-price')||p.price,
+    stock:num('ap-edit-stock')??p.stock,
+    brand:p.brand,imageUrl:p.imageUrl,
+    categoryId:p.categoryId
+  });
+  if(res.ok){ toast('Updated!','ok'); loadProducts(); }
+  else toast('Failed','err');
+}
+async function adminDeleteProduct(){
+  const id=num('ap-edit-id'); if(!id) return toast('Enter ID','err');
+  const res=await api('DELETE','/products/'+id);
+  if(res.ok){ toast('Deleted','ok'); loadProducts(); }
+  else toast('Failed','err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CATEGORIES
+// ═══════════════════════════════════════════════════════════
+async function loadCategories(){
+  const res=await api('GET','/categories');
+  if(!res.ok) return;
+  const cats=res.data||[];
+  const el=document.getElementById('admin-cat-list');
+  if(!el) return;
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <tr><th>ID</th><th>Icon</th><th>Name</th><th>Description</th><th>Services</th><th>Products</th><th>Active</th></tr>
+    ${cats.map(c=>`<tr>
+      <td>${c.id}</td><td style="font-size:1.2rem">${c.icon||''}</td>
+      <td><strong>${c.name}</strong></td><td>${c.description||''}</td>
+      <td>${c.serviceCount}</td><td>${c.productCount}</td>
+      <td>${c.isActive?'✅':'❌'}</td>
+    </tr>`).join('')}
+  </table></div>`;
+}
+async function adminCreateCategory(){
+  const res=await api('POST','/categories',{
+    name:val('ac-name'),description:val('ac-desc'),
+    icon:val('ac-icon'),imageUrl:val('ac-img')
+  });
+  if(res.ok){ toast('Category created!','ok'); loadCategories(); }
+  else toast('Failed: '+JSON.stringify(res.data),'err');
+}
+async function adminUpdateCategory(){
+  const id=num('ac-edit-id'); if(!id) return toast('Enter ID','err');
+  const res=await api('PUT','/categories/'+id,{
+    name:val('ac-edit-name'),description:val('ac-edit-desc'),
+    icon:'📦',imageUrl:''
+  });
+  if(res.ok){ toast('Updated!','ok'); loadCategories(); }
+  else toast('Failed','err');
+}
+async function adminDeleteCategory(){
+  const id=num('ac-edit-id'); if(!id) return toast('Enter ID','err');
+  const res=await api('DELETE','/categories/'+id);
+  if(res.ok){ toast('Deleted','ok'); loadCategories(); }
+  else toast('Failed','err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CART
+// ═══════════════════════════════════════════════════════════
+async function loadCart(){
+  const res=await api('GET','/cart');
+  if(!res.ok) return;
+  const cart=res.data;
+  const el=document.getElementById('cart-view');
+  if(!el) return;
+  if(!cart.items||!cart.items.length){ el.innerHTML='<p style="color:var(--muted)">Cart is empty.</p>'; return; }
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <tr><th>Item ID</th><th>Name</th><th>Price</th><th>Qty</th><th>Total</th></tr>
+    ${cart.items.map(i=>`<tr>
+      <td>${i.id}</td><td>${i.name}</td>
+      <td>$${i.price}</td><td>${i.quantity}</td>
+      <td style="font-weight:700">$${i.total.toFixed(2)}</td>
+    </tr>`).join('')}
+    <tr><td colspan="4" style="text-align:right;font-weight:700">Grand Total</td><td style="font-weight:700;color:var(--accent)">$${cart.total.toFixed(2)}</td></tr>
+  </table></div>`;
+}
+async function addToCart(){
+  const prodId=num('cart-prod-id');
+  const svcId=num('cart-svc-id');
+  const qty=num('cart-qty')||1;
+  if(!prodId&&!svcId) return toast('Enter a product or service ID','err');
+  const body={quantity:qty};
+  if(prodId) body.productId=prodId;
+  if(svcId) body.serviceId=svcId;
+  const res=await api('POST','/cart/add',body);
+  if(res.ok){ toast('Added to cart!','ok'); loadCart(); }
+  else toast('Failed: '+JSON.stringify(res.data),'err');
+}
+async function removeFromCart(){
+  const id=num('cart-remove-id'); if(!id) return toast('Enter item ID','err');
+  const res=await api('DELETE','/cart/remove/'+id);
+  if(res.ok){ toast('Removed','ok'); loadCart(); }
+  else toast('Failed','err');
+}
+async function clearCart(){
+  const res=await api('DELETE','/cart/clear');
+  if(res.ok){ toast('Cart cleared','ok'); loadCart(); }
+  else toast('Failed','err');
+}
+async function checkout(){
+  const cart=(await api('GET','/cart')).data;
+  if(!cart?.items?.length) return toast('Cart is empty','err');
+  const items=cart.items.map(i=>({
+    productId:i.productId||undefined,
+    quantity:i.quantity,
+    unitPrice:i.price
+  }));
+  const res=await api('POST','/orders',{
+    orderType:'Product',
+    address:val('co-address'),
+    notes:val('co-notes'),
+    items
+  });
+  if(res.ok){
+    toast('Order placed! #'+res.data?.orderNumber,'ok');
+    await api('DELETE','/cart/clear');
+    loadCart();
+    switchPanel('c-orders');
+  } else toast('Checkout failed: '+JSON.stringify(res.data),'err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ORDERS
+// ═══════════════════════════════════════════════════════════
+async function loadMyOrders(){
+  const res=await api('GET','/orders');
+  if(!res.ok) return;
+  const orders=res.data||[];
+  ['my-orders-list','worker-orders-list'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=ordersTable(orders,true);
+  });
+}
+async function loadAllOrders(){
+  const res=await api('GET','/orders');
+  if(!res.ok) return;
+  const el=document.getElementById('admin-orders-table');
+  if(el) el.innerHTML=ordersTable(res.data||[],true);
+}
+async function loadOrderDetail(){
+  const id=num('ord-detail-id'); if(!id) return toast('Enter order ID','err');
+  const res=await api('GET','/orders/'+id);
+  const el=document.getElementById('ord-detail-view');
+  if(!el) return;
+  if(!res.ok){ el.innerHTML='<p style="color:var(--red)">Not found</p>'; return; }
+  const o=res.data;
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <tr><td><strong>Order #</strong></td><td>${o.orderNumber}</td></tr>
+    <tr><td><strong>Type</strong></td><td>${o.orderType}</td></tr>
+    <tr><td><strong>Status</strong></td><td>${statusPill(o.status)}</td></tr>
+    <tr><td><strong>Payment</strong></td><td>${statusPill(o.paymentStatus||'Pending')}</td></tr>
+    <tr><td><strong>Total</strong></td><td style="font-weight:700;color:var(--accent)">$${(o.totalAmount||0).toFixed(2)}</td></tr>
+    <tr><td><strong>Customer</strong></td><td>${o.customerName||'—'}</td></tr>
+    <tr><td><strong>Worker</strong></td><td>${o.workerName||'—'}</td></tr>
+    <tr><td><strong>Service</strong></td><td>${o.serviceTitle||'—'}</td></tr>
+    <tr><td><strong>Address</strong></td><td>${o.address||'—'}</td></tr>
+    <tr><td><strong>Notes</strong></td><td>${o.notes||'—'}</td></tr>
+    <tr><td><strong>Scheduled</strong></td><td>${o.scheduledAt?new Date(o.scheduledAt).toLocaleString():'—'}</td></tr>
+  </table></div>
+  ${o.orderItems?.length?`<div class="tbl-wrap" style="margin-top:10px"><table>
+    <tr><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th></tr>
+    ${o.orderItems.map(i=>`<tr><td>${i.productName||i.productId}</td><td>${i.quantity}</td><td>$${i.unitPrice}</td><td>$${i.totalPrice}</td></tr>`).join('')}
+  </table></div>`:''}`;
+}
+async function cancelOrder(){
+  const id=num('cancel-ord-id'); if(!id) return toast('Enter order ID','err');
+  const res=await api('DELETE','/orders/'+id);
+  if(res.ok){ toast('Order cancelled','ok'); loadMyOrders(); }
+  else toast('Failed','err');
+}
+async function adminUpdateOrderStatus(){
+  const id=num('ao-id'); if(!id) return toast('Enter order ID','err');
+  await updateOrderStatus(id,val('ao-status'));
+  loadAllOrders();
+}
+async function workerUpdateOrderStatus(){
+  const id=num('wo-ord-id'); if(!id) return toast('Enter order ID','err');
+  await updateOrderStatus(id,val('wo-status'));
+  loadMyOrders();
+}
+async function updateOrderStatus(id,status){
+  const res=await api('PUT','/orders/'+id+'/status',status);
+  if(res.ok) toast('Status updated to '+status,'ok');
+  else toast('Failed: '+JSON.stringify(res.data),'err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  REVIEWS
+// ═══════════════════════════════════════════════════════════
+async function loadReviews(){
+  let qs='?';
+  const sv=val('rv-svc-id'); if(sv) qs+='serviceId='+sv+'&';
+  const pv=val('rv-prod-id'); if(pv) qs+='productId='+pv+'&';
+  const wv=val('rv-worker-id'); if(wv) qs+='workerId='+wv+'&';
+  const res=await api('GET','/reviews'+qs);
+  if(!res.ok) return;
+  const reviews=res.data||[];
+  const renderReviews=(containerId)=>{
+    const el=document.getElementById(containerId);
+    if(!el) return;
+    if(!reviews.length){ el.innerHTML='<p style="color:var(--muted)">No reviews.</p>'; return; }
+    el.innerHTML=reviews.map(r=>`
+      <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between">
+          <strong>${r.userName||'Anonymous'}</strong>
+          <span>${'⭐'.repeat(r.rating)}</span>
+        </div>
+        <p style="font-size:.82rem;color:var(--muted);margin-top:6px">${r.comment||'No comment'}</p>
+        <p style="font-size:.7rem;color:#cbd5e1;margin-top:4px">${new Date(r.createdAt).toLocaleDateString()}</p>
+      </div>`).join('');
+  };
+  renderReviews('reviews-list');
+  renderReviews('admin-reviews-list');
+}
+async function submitReview(){
+  const body={
+    orderId:num('rv-ord-id')||undefined,
+    rating:num('rv-rating')||5,
+    comment:val('rv-comment'),
+    serviceId:num('rv-new-svc')||undefined,
+    productId:num('rv-new-prod')||undefined,
+    workerId:val('rv-new-worker')||undefined
+  };
+  const res=await api('POST','/reviews',body);
+  if(res.ok){ toast('Review submitted!','ok'); loadReviews(); }
+  else toast('Failed: '+JSON.stringify(res.data),'err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════════════════════════
+async function loadProfile(){
+  const res=await api('GET','/users/profile');
+  if(!res.ok) return;
+  const u=res.data;
+  const html=`<div class="tbl-wrap"><table>
+    <tr><td><strong>Name</strong></td><td>${u.fullName}</td></tr>
+    <tr><td><strong>Email</strong></td><td>${u.email}</td></tr>
+    <tr><td><strong>Role</strong></td><td>${u.role}</td></tr>
+    <tr><td><strong>Phone</strong></td><td>${u.phone||'—'}</td></tr>
+    <tr><td><strong>Address</strong></td><td>${u.address||'—'}</td></tr>
+    <tr><td><strong>Skills</strong></td><td>${u.skills||'—'}</td></tr>
+    <tr><td><strong>Hourly Rate</strong></td><td>${u.hourlyRate?'$'+u.hourlyRate:'—'}</td></tr>
+    <tr><td><strong>Rating</strong></td><td>${u.rating?'⭐'+u.rating.toFixed(1):'—'}</td></tr>
+    <tr><td><strong>Available</strong></td><td>${u.isAvailable?'✅ Yes':'❌ No'}</td></tr>
+  </table></div>`;
+  ['profile-view','worker-profile-view'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=html;
+  });
+  // prefill fields
+  setVal('p-name',u.fullName);   setVal('wp-name',u.fullName);
+  setVal('p-phone',u.phone||''); setVal('wp-phone',u.phone||'');
+  setVal('p-address',u.address||'');
+  setVal('wp-skills',u.skills||'');
+  setVal('wp-bio',u.bio||'');
+  if(u.hourlyRate) setVal('wp-rate',u.hourlyRate);
+  const avail=document.getElementById('wp-available');
+  if(avail) avail.checked=!!u.isAvailable;
+}
+const setVal=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+
+async function updateProfile(){
+  const res=await api('PUT','/users/profile',{
+    fullName:val('p-name'),phone:val('p-phone'),
+    address:val('p-address'),profileImage:val('p-img'),
+    skills:'',bio:'',hourlyRate:0,isAvailable:false
+  });
+  if(res.ok){ toast('Profile updated!','ok'); loadProfile(); }
+  else toast('Failed','err');
+}
+async function workerUpdateProfile(){
+  const res=await api('PUT','/users/profile',{
+    fullName:val('wp-name'),phone:val('wp-phone'),
+    skills:val('wp-skills'),bio:val('wp-bio'),
+    hourlyRate:num('wp-rate')||0,
+    isAvailable:document.getElementById('wp-available').checked,
+    address:'',profileImage:''
+  });
+  if(res.ok){ toast('Profile updated!','ok'); loadProfile(); }
+  else toast('Failed','err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+async function loadNotifs(){
+  const res=await api('GET','/notifications');
+  if(!res.ok) return;
+  const notifs=res.data||[];
+  const el=document.getElementById('notif-list');
+  if(!el) return;
+  if(!notifs.length){ el.innerHTML='<p style="color:var(--muted)">No notifications.</p>'; return; }
+  el.innerHTML=notifs.map(n=>`
+    <div class="notif-item ${n.isRead?'':'unread'}">
+      ${!n.isRead?'<div class="notif-dot"></div>':'<div style="width:8px"></div>'}
+      <div class="notif-body">
+        <div class="title">${n.title}</div>
+        <div class="msg">${n.message}</div>
+        <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+      </div>
+      ${!n.isRead?`<button class="btn btn-ghost btn-sm" onclick="markRead(${n.id})">Mark Read</button>`:''}
+    </div>`).join('');
+}
+async function markRead(id){
+  await api('PUT','/notifications/'+id+'/read');
+  loadNotifs();
+}
+async function markAllRead(){
+  await api('PUT','/notifications/read-all');
+  toast('All marked as read','ok');
+  loadNotifs();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DASHBOARDS
+// ═══════════════════════════════════════════════════════════
+async function loadAdminDash(){
+  const res=await api('GET','/dashboard/admin');
+  if(!res.ok) return;
+  const d=res.data;
+  const grid=document.getElementById('admin-stats');
+  if(grid) grid.innerHTML=[
+    ['👥 Users',d.totalUsers],['🧑‍🔧 Workers',d.totalWorkers],
+    ['👤 Customers',d.totalCustomers],['📋 Orders',d.totalOrders],
+    ['⏳ Pending',d.pendingOrders],['✅ Completed',d.completedOrders],
+    ['📦 Products',d.totalProducts],['🛠 Services',d.totalServices],
+    ['📁 Categories',d.totalCategories],['💰 Revenue','$'+(d.totalRevenue||0).toFixed(0)]
+  ].map(([lbl,val])=>`<div class="stat-card"><div class="val">${val}</div><div class="lbl">${lbl}</div></div>`).join('');
+  const tbl=document.getElementById('admin-recent-orders');
+  if(tbl) tbl.innerHTML=ordersTable(d.recentOrders||[]);
+}
+
+async function loadWorkerDash(){
+  const res=await api('GET','/dashboard/worker');
+  if(!res.ok) return;
+  const d=res.data;
+  const grid=document.getElementById('worker-stats');
+  if(grid) grid.innerHTML=[
+    ['📋 Total Orders',d.totalOrders],['⏳ Pending',d.pendingOrders],
+    ['✅ Completed',d.completedOrders],['🛠 My Services',d.totalServices],
+    ['💰 Earnings','$'+(d.totalEarnings||0).toFixed(0)],
+    ['⭐ Rating',(d.averageRating||0).toFixed(1)],['📝 Reviews',d.totalReviews]
+  ].map(([lbl,val])=>`<div class="stat-card"><div class="val">${val}</div><div class="lbl">${lbl}</div></div>`).join('');
+  const tbl=document.getElementById('worker-recent-orders');
+  if(tbl) tbl.innerHTML=ordersTable(d.recentOrders||[]);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  USERS (ADMIN)
+// ═══════════════════════════════════════════════════════════
+async function loadAllUsers(){
+  const res=await api('GET','/users');
+  const el=document.getElementById('admin-users-table');
+  if(!el||!res.ok) return;
+  const users=res.data||[];
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <tr><th>Name</th><th>Email</th><th>Role</th><th>Phone</th><th>Active</th><th>Actions</th></tr>
+    ${users.map(u=>`<tr>
+      <td><strong>${u.fullName}</strong></td>
+      <td>${u.email}</td><td>${u.role}</td><td>${u.phone||'—'}</td>
+      <td>${u.isActive?'✅':'❌'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="setVal('admin-toggle-id','${u.id}');setVal('admin-user-id','${u.id}')">Select</button>
+      </td>
+    </tr>`).join('')}
+  </table></div>`;
+}
+async function adminGetUser(){
+  const id=val('admin-user-id'); if(!id) return toast('Enter user ID','err');
+  const res=await api('GET','/users/'+id);
+  const el=document.getElementById('admin-user-detail');
+  if(!el) return;
+  if(!res.ok){ el.innerHTML='Not found'; return; }
+  const u=res.data;
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <tr><td><strong>Name</strong></td><td>${u.fullName}</td></tr>
+    <tr><td><strong>Email</strong></td><td>${u.email}</td></tr>
+    <tr><td><strong>Role</strong></td><td>${u.role}</td></tr>
+    <tr><td><strong>Skills</strong></td><td>${u.skills||'—'}</td></tr>
+    <tr><td><strong>Rating</strong></td><td>${u.rating?'⭐'+u.rating.toFixed(1):'—'}</td></tr>
+    <tr><td><strong>Active</strong></td><td>${u.isActive?'✅':'❌'}</td></tr>
+  </table></div>`;
+}
+async function adminToggleUser(){
+  const id=val('admin-toggle-id'); if(!id) return toast('Enter user ID','err');
+  const res=await api('PUT','/users/'+id+'/toggle-status');
+  if(res.ok){ toast('Status toggled!','ok'); loadAllUsers(); }
+  else toast('Failed','err');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  WORKERS LIST
+// ═══════════════════════════════════════════════════════════
+async function loadWorkers(){
+  let qs='?';
+  const sk=val('wl-skill'); if(sk) qs+='skill='+encodeURIComponent(sk)+'&';
+  const av=val('wl-avail'); if(av) qs+='available='+av+'&';
+  const res=await api('GET','/users/workers'+qs);
+  if(!res.ok) return;
+  const workers=res.data||[];
+  const el=document.getElementById('workers-grid');
+  if(!el) return;
+  if(!workers.length){ el.innerHTML='<p style="color:var(--muted)">No workers found.</p>'; return; }
+  el.innerHTML=workers.map(w=>`
+    <div class="item-card">
+      <img src="${w.profileImage||''}" onerror="this.style.background='#e2e8f0';this.style.height='80px'" alt="${w.fullName}"/>
+      <div class="item-info">
+        <div class="item-name">${w.fullName}</div>
+        <div class="item-price">${w.hourlyRate?'$'+w.hourlyRate+'/hr':'Rate N/A'}</div>
+        <div class="item-sub">⭐${(w.rating||0).toFixed(1)} · ${w.skills||'No skills listed'}</div>
+        <div class="item-sub">${w.isAvailable?'<span style="color:var(--green)">● Available</span>':'<span style="color:var(--muted)">● Unavailable</span>'}</div>
+        <div class="item-actions">
+          <button class="btn btn-primary btn-sm" onclick="setVal('book-worker-id','${w.id}');switchPanel('c-browse');toast('Worker ID pre-filled in Book Service','ok')">Book</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── Init ───────────────────────────────────────────────────
+if(TOKEN) toast('Session restored as '+USER_NAME+' ('+ROLE+')', 'ok');
+</script>
+</body>
+</html>

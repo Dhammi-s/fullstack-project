@@ -151,6 +151,7 @@ namespace fullstack_project.Server.DTOs
         public DateTime? ScheduledAt { get; set; }
         public int? ServiceId { get; set; }
         public string? WorkerId { get; set; }
+        public string PaymentMethod { get; set; } = "Online"; // Online, COD
         public List<OrderItemDto> Items { get; set; } = new();
     }
 
@@ -169,12 +170,15 @@ namespace fullstack_project.Server.DTOs
         public decimal TotalAmount { get; set; }
         public string PaymentStatus { get; set; } = string.Empty;
         public string OrderType { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = "Online";
         public string? Notes { get; set; }
         public string? Address { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? ScheduledAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public string CustomerId { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
+        public string? WorkerId { get; set; }
         public string? WorkerName { get; set; }
         public string? ServiceTitle { get; set; }
         public List<OrderItemResponseDto> Items { get; set; } = new();
@@ -335,5 +339,41 @@ namespace fullstack_project.Server.DTOs
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? Link { get; set; }
+    }
+
+    // Settings DTOs
+    public class AppSettingsDto
+    {
+        public string SiteName { get; set; } = "DailyNeeds";
+        public string SiteEmail { get; set; } = string.Empty;
+        public string SitePhone { get; set; } = string.Empty;
+        public string Currency { get; set; } = "USD";
+        public bool AllowRegistration { get; set; } = true;
+        public bool MaintenanceMode { get; set; } = false;
+        public bool AllowCOD { get; set; } = true;
+        public bool AllowOnlinePayment { get; set; } = true;
+        public bool ShowWorkerRatings { get; set; } = true;
+        public bool RequireAdminApproval { get; set; } = false;
+        public decimal PlatformFeePercent { get; set; } = 10;
+    }
+
+    // Assign worker DTO
+    public class AssignWorkerDto
+    {
+        public string WorkerId { get; set; } = string.Empty;
+    }
+
+    // Schedule DTO
+    public class ScheduledOrderDto
+    {
+        public int Id { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string? ServiceTitle { get; set; }
+        public string? Address { get; set; }
+        public DateTime? ScheduledAt { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public string PaymentMethod { get; set; } = "Online";
     }
 }
