@@ -84,7 +84,20 @@ export default function AdminSettings() {
           {saving ? 'Saving…' : 'Save Settings'}
         </button>
       </div>
-
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 mt-4 border-t border-gray-100 dark:border-gray-850">
+              <div className="mb-3 sm:mb-0">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Data Warehouse Dashboard</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Access and analyze internal system metrics and historical data.</p>
+              </div>
+              <a
+                  href="https://data-warehouse-mu.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition-colors duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                  Open Data Warehouse
+              </a>
+          </div>
       <Section icon={Globe} title="Site Information">
         <SettingsField label="Site Name" value={settings.siteName} onChange={v => set('siteName', v)} />
         <SettingsField label="Contact Email" value={settings.siteEmail} onChange={v => set('siteEmail', v)} type="email" />
